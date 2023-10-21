@@ -146,29 +146,22 @@ Empaia platform. To this end, the container engine [Docker](https://www.docker.c
 Alternative container engines such as Podman, containerd, LXC do not work...).
 Hence, you have docker installed on your system first.
 
-{% note %}
-**Note:** The container virtualization technology underlying Docker and co. is provided by powers of the Linux kernel.
-Hence, containers basically _only_ work under Linux. However, with some "tricks" containers can be also run on 
-Windows and Mac OS X (using a hypervisor). This is also the reason why Docker is _free to use_ only on Linux 
-and for private or open source projects only when you are on Windows or Mac. 
-If you plan to use Docker for Windows/Mac in an organizational context, you have to obtain a licence!
-Also the performance of containers on Windows/Mac will always be sub-par compared with their Linux equivalent
-and should therefore only be used for testing purposes.
-{% note %}
+> [!NOTE]
+> The container virtualization technology underlying Docker and co. is provided by powers of the Linux kernel.
+> Hence, containers basically _only_ work under Linux. However, with some "tricks" containers can be also run on 
+> Windows and Mac OS X (using a hypervisor). This is also the reason why Docker is _free to use_ only on Linux 
+> and for private or open source projects only when you are on Windows or Mac. 
+> If you plan to use Docker for Windows/Mac in an organizational context, you have to obtain a licence!
+> Also the performance of containers on Windows/Mac will always be sub-par compared with their Linux equivalent
+> and should therefore only be used for testing purposes.
 
 Follow the official guide on how to install Docker for your operating system:
-{% mac %}
-[Install Guide](https://docs.docker.com/desktop/install/mac-install/)
-{% mac %}
-{% windows %}
-[Install Guide](https://docs.docker.com/desktop/install/windows-install/)
-{% windows %}
-{% linux %}
-[Install Guide](https://docs.docker.com/desktop/install/linux-install/)
-{% linux %}
+- [Mac Install Guide](https://docs.docker.com/desktop/install/mac-install/)
+- [Windows Install Guide](https://docs.docker.com/desktop/install/windows-install/)
+- [Linux Install Guide](https://docs.docker.com/desktop/install/linux-install/)
 
 When Docker is installed you can install `eats` simply as a [python package](https://pypi.org/project/empaia-app-test-suite/), 
-i.e. open a up a command line and type:
+i.e. open a up a command line (if you use windows, you have to enter a Linux shell in WSL via the Windows Terminal) and type:
 ```bash
 pip install empaia-app-test-suite
 ```
@@ -179,31 +172,16 @@ python3 -m pip install empaia-app-test-suite
 
 Next, you should collect some slide images that you want to use in the test suite and place them into a working directory.
 Navigate to a nice location in you file system using the command line (recall that you use `cd` to change directories and 
-`pwd` [Linux/Mac]/`echo %cd%`[Windows] to see where you currently are), create a folder called `eats`, including a sub-folder
+`pwd` to see where you currently are), create a folder called `eats`, including a sub-folder
 for the `images`:
+
 ```bash
 mkdir eats
 cd eats
 mkdir images
 ```
 
-Depending on your operating system, you can use one of the following commands to open the file explorer in the present location 
-{% mac %}
-```bash
-open .
-```
-{% mac %}
-{% windows %}
-```bash
-start .
-```
-{% windows %}
-{% linux %}
-```bash
-xdg-open .
-```
-{% linux %}
-and then move the slide images into the `images` folder.
+Open a file explorer at the respective location and then move the slide images into the `images` folder.
 
 Before, we can start EATS, we have to create one more json file called `wsi-mount-points.json` and place it directly
 beneath the `eats` directory. The content of this file will look something like:
@@ -214,18 +192,14 @@ beneath the `eats` directory. The content of this file will look something like:
 ```
 the `/global/path/to/` is a placeholder for the fully-qualified path from the root of you file system to the newly
 created `eats` directory. 
-{% windows %}
-As a windows user you will necissarily run EATS from within _Windows Subsystem for Linux (WSL)_ in order to run Docker.
-Thus, paths in the Windows file system have to be aligned, concretely:
-```
-C:\Users\<username>\Downloads\eats\
-```
-becomes
-```
-/mnt/c/Users/<username>/Downloads/eats/
-```
-in WSL.
-{% windows %}
+
+> [!NOTE]
+> As a windows user you will necissarily run EATS from within _Windows Subsystem for Linux (WSL)_ in order to run Docker.
+> Thus, paths in the Windows file system have to be aligned, concretely:
+> `C:\Users\<username>\Downloads\eats\`
+> becomes
+> `/mnt/c/Users/<username>/Downloads/eats/`
+> in WSL.
 
 Finally, you are able to start EATS with the command:
 ```bash
