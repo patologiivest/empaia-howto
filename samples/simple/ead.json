@@ -1,0 +1,28 @@
+{
+    "$schema": "https://gitlab.com/empaia/integration/definitions/-/raw/main/ead/ead-schema.v3.json",
+    "name": "PiV Demo App No 1",
+    "name_short": "demo1",
+    "namespace": "org.empaia.helse_vest_piv.demo_app_1.v3.1",
+    "description": "Testing out the Empaia app",
+    "io": {
+        "my_wsi": {
+            "type": "wsi"
+        },
+        "my_quantification_result": {
+            "type": "float",
+            "description": "Human readable text, e.g. super important metric",
+            "reference": "io.my_wsi"
+        }
+    },
+    "modes": {
+        "standalone": {
+            "inputs": [
+                "my_wsi"
+            ],
+            "outputs": [
+                "my_quantification_result"
+            ]
+        }
+    }
+
+}

@@ -56,7 +56,7 @@ Below, you find an example of how such a `ead.json` file may look like:
     "$schema": "https://gitlab.com/empaia/integration/definitions/-/raw/main/ead/ead-schema.v3.json",
     "name": "My Cool Medical AI Algorithm",
     "name_short": "Cool App",
-    "namespace": "org.empaia.helse-vest-piv.cool_app.v3.1",
+    "namespace": "org.empaia.helse_vest_piv.cool_app.v3.1",
     "description": "Does super advanced AI stuff, you know...",
     "io": {
         "my_wsi": {
@@ -90,7 +90,7 @@ The fields
 - `modes`
 
 are mandatory! The `$schema` property is fixed and links to [JSON schema definition](https://gitlab.com/empaia/integration/definitions/-/blob/main/ead/ead-schema.v3.json).
-The properties `name`, `name_short`, and `description` are used to display a user readable (short) title and 
+The properties `name`, `name_short`, and `description` are used to display a user readable (short) title (must not contain any dots or fancy symbols) and 
 description in the Empaia UI. The `namespace` servces as a _unique_ identifier for you app. Therefore, it has to 
 follow a specific naming scheme, see [here](https://developer.empaia.org/app_developer_docs/v3/#/specs/ead?id=namespace)!
 The `io` section defines all the parameters that will be used as in- or output for the app, see respective section below.
@@ -220,19 +220,327 @@ Create another json file with following content:
 {
     "type": "wsi",
     "path": "/data/<image-name>",
-    "id: "<id>"
+    "id": "<id>"
 }
 ```
 The `<image-name>` must coincide with the file name of an image in the `/eats/images` folder. 
-The `<id>` can be arbitrarily chosen.
-Name the file something like `slide1.json`.
-Now you can register the slide with:
+The `<id>` is expected to be an arbitrary [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier) (you can 
+create random uuid's in the command line using the binary `uuidgen` :wink:).
+
+Name the file something like `slide1.json` and register the slide with:
 ```bash
 eats slides register slide1.json
 ```
+If you have multiple slides in your `/images` folder, you have to repeat this process for all files in that folder 
+in order to be able to see them in the workbench client. 
+Remember to change the value in `<image-name>` accordingly and provide a fresh UUID for each of them!
 
-You have to repeat this process for all your images in order to see them in the workbench client. 
-Also make sure that the slides receive distinct ids!
+When opening the workbench client again, you will spot the cases/images that you just registered with their respective 
+ids. Selecting a case will lead you to another screen where you can select a slide, which again opens the generic image 
+viewer where you can navigate around as well as zoom in and out. 
+On the left side panel you should also see a message telling you that there are no apps yet!
+We will fix this in the next steps.
+
+## Understanding the EMPAIA REST API
+
+The Empaia platform treats the registered apps/algorithms as _black boxes_, more conrectly: as container images.
+The container image is a bluprint of an arbitrary application that packages all its dependencies. 
+When the application starts it needs access to its input parameters (most importantly the whole slide image data).
+The application retrieves this information by asking the EMPAIA platform over HTTP, i.e. the platform offers 
+a REST API that apps use to download parameter data and upload results. 
+
+With EATS running, you can access the up-to-date API documentation behind the following URL:
+```
+http://localhost:8888/app-api/v3/docs
+```
+
+It is recommended to familiarize yourself a bit with this API in order to write the glue code for your app.
+However, in order to be able to access the API with a client you will need a `JOB_ID` and a `EMPAIA_TOKEN`.
+To get these, we first need to register an `APP`.
+Apps are registered by providing an `ead.json` file and the name of a container image registered in the local Docker 
+container registry.
+
+> But how?
+
+You may ask now! We are just about to understand how the Empaia API works in order to be able to develop our app.
+So we are running into an Egg-and-Hen problem, right? Well, technically yes! But noboday said we have to hit 100% 
+on our first try. So lets just build a stub container image right now in order to be able to register an app 
+and then we can later update our container image when we have the final application ready.
+
+So lets containerize a super-simple python app:
+Create a directory `app` containing a file `glue.py` and a file called `Dockerfile`.
+
+`glue.py` Content:
+```python
+print("Hello World")  # Creative isn't it?!
+```
+
+`Dockerfile` content:
+```Dockerfile
+FROM python:3.11-slim
+COPY . /app
+WORKDIR /app
+CMD ["python3", "glue.py"]
+```
+
+You build the image with
+```
+docker build -t my_app .
+```
+
+And register it with 
+```bash
+eats apps register ead.sjon my_app
+```
+The result of the aforementioned command will contain the `APP_ID`. 
+We have to note it down because we will need it for the next step!
+As we are currently living on the command line this means will be save the output of the previous command 
+as an _environment variable_: Simply copy the `APP_ID=...` part and prepend it with an `export ` -> Press Enter. 
+Entering 
+```bash
+echo $APP_ID
+```
+should yield the saved value.
 
 
+With an `APP_ID`, we can create a _job_, i.e. an instance of the algorithm. 
+But, in order to be able to be executable the job will need the input parameters. 
+Later when the app is in production, the input parameters will be determined by the user's inputs. 
+Now, during testing we have to explicitly provide the parameters beforehand.
+This is done by writing a JSON document for each input parameter, which is mentioned in the EAD.
+The JSON files have to be placed inside the same directory and their file names must coincide with the parameter names.
+
+If you have used the simple `ead.json` example from the beginning, there will be exactly one parameter to be provided: `my_wsi`!
+WSI parameters are specified in the same way as we did for registering a slide with the `eats slides register` command.
+Copy the `slide1.json` file from before, copy it into a a new folder called `/inputs` and rename it to `my_wsi.json`.
+
+```bash
+eats jobs register $APP_ID /inputs
+```
+the result will provide you with the `EMPAIA_JOB_ID`, an `EMPAIA_TOKEN`, and the `EMPAIA_APP_API`.
+The latter can be ignored for now, but the job id and the toke are important. 
+Hence, safe them as environment variables:
+We will need them in order to make HTTP requests. 
+
+There is one technical thing to be done before, we can test out the requests.
+The job state has to be changed to `RUNNING`, this is done via the `eats` command line.
+```
+eats jobs set-running $JOB_ID
+```
+
+Puh, Finally! We are ready to interat with the EMPAIA API.
+Get you favourite HTTP client started, e.g. [Postman](https://www.postman.com/) if you like it graphically or 
+[curl](https://curl.se/) or [httpie](https://httpie.io/) if you are more of an command line ninja :ninja:.
+
+All input parameters are retrieved via a GET to the folling URL:
+```
+http://localhost:8888/app-api/v3/$JOB_ID/inputs/{input_param_name}
+```
+There are two variables in this path: One if the `JOB_ID` that we got from registering the job, the 
+`input_param_name` refers to one of the parameters defined in the EAD. 
+Sticking with the running example, this is again `my_wsi`.
+Go ahead! Send it! (speaking of the request).
+
+As you see when inspecting the result: You are not getting the whole slide image immediately as a response to your request.
+Rather you are greeted with a JSON document containing meta-information about your slide.
+It might look something like this:
+```json
+{
+    "id": "f7dec770-b248-41eb-b584-214f819b677b",
+    "channels": [
+        {
+            "id": 0,
+            "name": "Red",
+            "color": {
+                "r": 255,
+                "g": 0,
+                "b": 0,
+                "a": 0
+            }
+        },
+        {
+            "id": 1,
+            "name": "Green",
+            "color": {
+                "r": 0,
+                "g": 255,
+                "b": 0,
+                "a": 0
+            }
+        },
+        {
+            "id": 2,
+            "name": "Blue",
+            "color": {
+                "r": 0,
+                "g": 0,
+                "b": 255,
+                "a": 0
+            }
+        }
+    ],
+    "channel_depth": 8,
+    "extent": {
+        "x": 46000,
+        "y": 32914,
+        "z": 1
+    },
+    "num_levels": 3,
+    "pixel_size_nm": {
+        "x": 499.0,
+        "y": 499.0,
+        "z": null
+    },
+    "tile_extent": {
+        "x": 256,
+        "y": 256,
+        "z": 1
+    },
+    "levels": [
+        {
+            "extent": {
+                "x": 46000,
+                "y": 32914,
+                "z": 1
+            },
+            "downsample_factor": 1.0
+        },
+        {
+            "extent": {
+                "x": 11500,
+                "y": 8228,
+                "z": 1
+            },
+            "downsample_factor": 4.000121536217793
+        },
+        {
+            "extent": {
+                "x": 2875,
+                "y": 2057,
+                "z": 1
+            },
+            "downsample_factor": 16.00048614487117
+        }
+    ],
+    "format": "file-tiff-aperio-tiffslide",
+    "raw_download": true,
+    "tissue": "KIDNEY",
+    "stain": "H_AND_E"
+}
+```
+What every field means is well-documented in the Empaia docs.
+I will shortly sketch the most important parts.
+
+- The `id` is very important for the next step as wee need it to retrieve actual image data
+- `extent` shows the pixel dimensions (size) of the whole image (at zoom factor 1)
+- `pixel_size_nm` shows how a pixel translates to a real-world measurement (in nanometers),
+- `tile_extent` shows the dimensions of a tile,
+- `levels` contain an array of zoom-factors at which the image data is available at. 
+
+Using some elementary math, we can thus quickly calculate that 
+
+- for the original size (level 0) there are 23220 tiles: (0,0) to (180,129)
+- zooming out with factor 4x (level 1), there are 1485 tiles: (0,0) to (45,33)
+- zooming out with factor 16x (level 2), there are 108 tiles: (0,0) to (12,9)
+
+This information comes in handy when you are using the GET endoint to download image data.
+
+Empai offers three ways to access whole slide image data:
+
+1. You can use the available pre-made tiles,
+1. You can download a specific region of the image, or 
+1. you can downlaod the whole slide image in a proprietary format package in a ZIP archive.
+
+The latter is discouraged will be thus ignored in the following. 
+The URLs for the first two endpoints are as follows:
+
+1. `http://localhost:8888/app-api/v3/$JOB_ID/tiles/{wsi_id}/level/{level}/position/{tile_x}/{tile_y}`
+1. `http://localhost:8888/app-api/v3/$JOB_ID/regions/{wsi_id}/level/{level}/start/{start_x}/{start_y}/size/{size_x}/{size_y}`
+
+The parameters `wsi_id` and `level` are extracted from the WSI meta information object obtained from our first request.
+The parameters `tile_x`, `tile_y`, `start_x`, `start_y`, `size_x`, and `size_y` for the tile and region endpoints are pretty much self-explanatory.
+HTTP responses from theese endpoints return the image data as a sequence of bytes.
+But this is not a problem at all since it can directly be parsed by the capable [Pillow](https://pillow.readthedocs.io/en/stable/index.html)
+library for python for instance, which again can be be piped directly through to Numpy.
+
+The following Python script will retrieve a specific image tile from our example and transforms it into a `width x height x 3`
+NumPy array:
+
+```python
+import requests
+import numpy as np
+from PIL import Image
+from io import BytesIO
+
+APP_URL = "http://localhost:8888/app-api"
+JOB_ID = os.environ('EMPAIA_JOB_ID')
+TOKEN = os.environ('EMPAIA_TOKEN')
+HEADER = {"Authorization": f"Bearer {TOKEN}"}
+
+# Retrieve meta-data
+input_url = f"{APP_URL}/v3/{JOB_ID}/inputs/my_wsi"
+r = requests.get(input_url, headers=HEADER)
+r.raise_for_status()
+wsi_meta = r.json()
+wsi_id = wsi_meta['id']
+
+# Download tile (7,1) at level 2 
+tile_url = f"{APP_URL}/v3/{JOB_ID}/tiles/{wsi_id}/level/2/position/7/1"
+r = requests.get(tile_url, headers=HEADER)
+r.raise_for_status()
+i = Image.open(BytesIO(r.content))
+a = np.array(i)
+print(a.shape)
+# Do something cool with your multi-dimensional array of pixel-color values, like put it in a Neural Network or so...
+```
+
+Okay, I think we are starting to get an understanding of the API now.
+Lets finish off our experiments with sending some stub values back to Empaia as the output parameters of our job.
+For this, there is a POST endpoint:
+```
+http://localhost:8888/app-api/v3/$JOB_ID/outputs/{output_param}
+```
+
+In our running EAD example the one existing output parameter was called `my_quantification_result` and was of type `float`.
+Open your favourite HTTP client again and prepare the POST request with the following JSON payload:
+```json
+{
+    "name": "The answer to the universe and everything",
+    "type": "float",
+    "value": 42.0,
+    "creator_type": "job",  
+    "creator_id": "bef96989-dc45-4ce0-9e78-323a9dfd6eea"  
+}
+```
+
+Finally, we can wrap up and finish our JOB by sending a PUT to the "Finalize" endpoint:
+```
+http://localhost:8888/app-api/v3/$JOB_ID/finalize
+```
+
+## Write the glue code 
+
+I think now, we know enough that we are able to write the necessary integration "_glue code_"!
+
+To make the Python build reproducible and hassle-free, start with a virtual environment:
+```bash
+pyton3 -m virtualenv .venv
+source .venv/bin/activate
+```
+
+Now, install **all** required libraries.
+Some usual suspects:
+```
+pip install numpy
+pip install Pillow
+pip install requests
+...
+```
+
+When you are done, write them out to a `Requirements.txt`:
+```
+pip freeze > Requirement.txt
+```
+
+... to be continued...
 
