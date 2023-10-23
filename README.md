@@ -11,6 +11,10 @@ The general workflow when you plan to develop your own algorithm for their marke
 1. Write glue code 
 1. Containerize your application
 
+> [!NOTE]
+> If you spot any typos or things that are fundamentally wrong you are invited to contribute to this guidr [by making a pull request](https://github.com/patologiivest/empaia-howto/compare).
+> Also, feel free to "flesh out" the `samples/` directory! 
+
 ## Step 1: Prepare your application 
 
 We assume that you have your image analysis machine learning algorithm ready, which can be run _headlessly_.
@@ -20,6 +24,8 @@ accordingly. If you do not know how to do this, ask [past@hvl.no](mailto:past@hv
 
 Hence, as a first step you should clarify for yourself how the following architecture will look concretely for your 
 algorithm, i.e.:
+
+![Conceptual Architecture Overview](./resources/empaia.svg)
 
 - What user inputs aside from the _whole slide image (WSI)_ are needed?
 - What outputs should your algorithm produce: a single statistic (floating point number), structured information, or 
@@ -141,7 +147,7 @@ my_wsi
         └── class_good
 ```
 
-## Set up testing environment: Empaia App Test Suite (EATS)
+## Step 3: Set up testing environment: Empaia App Test Suite (EATS)
 
 Empaia provides a test suite such that you can test your application before handing it over to Empaia to make sure 
 it does what it is expected to do. 
@@ -246,7 +252,7 @@ viewer where you can navigate around as well as zoom in and out.
 On the left side panel you should also see a message telling you that there are no apps yet!
 We will fix this in the next steps.
 
-## Understanding the EMPAIA REST API
+## Step 4: Understanding the EMPAIA REST API
 
 The Empaia platform treats the registered apps/algorithms as _black boxes_, more conrectly: as [container images](https://docs.docker.com/get-started/overview/#images).
 The container image is a bluprint of an arbitrary application that packages all its dependencies. 
@@ -533,7 +539,7 @@ Finally, we can wrap up and finish our JOB by sending a PUT to the "Finalize" en
 
 > <http://localhost:8888/app-api/v3/$JOB_ID/finalize>
 
-## Write the glue code 
+## Step 5: Write the glue code 
 
 I think now, we know enough that we are able to write the necessary integration "_glue code_"!
 
@@ -584,7 +590,7 @@ manually register a _job_, set it running, and save the environment variables.
 
 When you are done, it is time to containerize the application again for good.
 
-## Containerize!
+## Step 6: Containerize!
 
 This means basically that you have to run `docker build` again with the same parameters as before. 
 However, we have fleshed out the Python app quite a bit more. 
@@ -606,7 +612,7 @@ docker build -t my_app .
 
 again!
 
-Congrats! You are done :tada: ! Feel free to open the workbench and call you algorithm!
+Congrats! You are done :tada: ! Feel free to open the workbench and call your algorithm!
 
 
 
