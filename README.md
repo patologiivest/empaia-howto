@@ -484,6 +484,7 @@ As an illustration, the following Python script will retrieve a specific image t
 NumPy array:
 
 ```python
+import os
 import requests
 import numpy as np
 from PIL import Image
