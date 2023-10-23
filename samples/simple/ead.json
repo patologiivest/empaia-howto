@@ -8,16 +8,22 @@
         "my_wsi": {
             "type": "wsi"
         },
+        "my_roi": {
+            "type": "rectangle",
+            "reference": "io.my_wsi",
+            "description": "Empaia forces you to have at least one annotation parameter to appea in the GUI"
+        },
         "my_quantification_result": {
             "type": "float",
             "description": "Human readable text, e.g. super important metric",
-            "reference": "io.my_wsi"
+            "reference": "io.my_roi"
         }
     },
     "modes": {
         "standalone": {
             "inputs": [
-                "my_wsi"
+                "my_wsi",
+                "my_roi"
             ],
             "outputs": [
                 "my_quantification_result"

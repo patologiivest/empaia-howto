@@ -1,0 +1,13 @@
+{
+    "type": "rectangle",
+    "name": "my_roi",
+    "upper_left": [
+        0,
+        0
+    ],
+    "width": 500,
+    "height": 500,
+    "reference_id": "f7dec770-b248-41eb-b584-214f819b677b",
+    "reference_type": "wsi"
+}
+
