@@ -12,7 +12,7 @@ The general workflow when you plan to develop your own algorithm for their marke
 1. Containerize your application
 
 > [!NOTE]
-> If you spot any typos or things that are fundamentally wrong you are invited to contribute to this guidr [by making a pull request](https://github.com/patologiivest/empaia-howto/compare).
+> If you spot any typos or things that are fundamentally wrong you are invited to contribute to this guide [by making a pull request](https://github.com/patologiivest/empaia-howto/compare).
 > Also, feel free to "flesh out" the `samples/` directory! 
 
 ## Step 1: Prepare your application 
@@ -25,7 +25,7 @@ accordingly. If you do not know how to do this, ask [past@hvl.no](mailto:past@hv
 Hence, as a first step you should clarify for yourself how the following architecture will look concretely for your 
 algorithm, i.e.:
 
-![Conceptual Architecture Overview](./resources/empaia.svg)
+![Conceptual Architecture Overview](./assets/empaia.svg)
 
 - What user inputs aside from the _whole slide image (WSI)_ are needed?
 - What outputs should your algorithm produce: a single statistic (floating point number), structured information, or 
