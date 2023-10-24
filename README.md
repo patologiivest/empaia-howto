@@ -15,6 +15,16 @@ The general workflow when you plan to develop your own algorithm for their marke
 > If you spot any typos or things that are fundamentally wrong you are invited to contribute to this guide [by making a pull request](https://github.com/patologiivest/empaia-howto/compare).
 > Also, feel free to "flesh out" the `samples/` directory! 
 
+## Step 0: Hardware requirements 
+
+In order to follow a long with this guid you have to have a machine that can 
+
+- Run `python` (version >= 3.8) and install python packages from PyPI,
+- run `docker` both CLI and deamons.
+
+In general, this means you must have root/administrator access to a Linux, MacOS X, or Windows (including Windows subsystem for Linux)
+workstation with virtualization enabled in the BIOS.
+
 ## Step 1: Prepare your application 
 
 We assume that you have your image analysis machine learning algorithm ready, which can be run _headlessly_.
