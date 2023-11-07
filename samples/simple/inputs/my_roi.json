@@ -8,6 +8,12 @@
     "width": 500,
     "height": 500,
     "reference_id": "f7dec770-b248-41eb-b584-214f819b677b",
-    "reference_type": "wsi"
+    "reference_type": "wsi",
+    "npp_created": 499,
+    "npp_viewing": [
+        1,
+        499123
+    ]
+
 }
 
