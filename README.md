@@ -107,9 +107,9 @@ The fields
 
 are mandatory! The `$schema` property is fixed and links to [JSON schema definition](https://gitlab.com/empaia/integration/definitions/-/blob/main/ead/ead-schema.v3.json).
 The properties `name`, `name_short`, and `description` are used to display a user readable (short) title (must not contain any dots or fancy symbols) and 
-description in the Empaia UI. The `namespace` servces as a _unique_ identifier for you app. Therefore, it has to 
+description in the Empaia UI. The `namespace` serves as a _unique_ identifier for your app. Therefore, it has to 
 follow a specific naming scheme, see [here](https://developer.empaia.org/app_developer_docs/v3/#/specs/ead?id=namespace)!
-The `io` section defines all the parameters that will be used as in- or output for the app, see respective section below.
+The `io` section defines all the parameters that will be used as in- or output, see respective section below.
 Finally, the `modes` section defines the _execution mode_ in which the app will run and what in- and output parameters 
 will be used then. For our purposes, we will stick with the `standalone` mode most of the time.
 
@@ -127,14 +127,14 @@ Parameters are specified inside the `io` section of the `ead` and follow a fixed
     }
 }
 ```
-The Empaia supported parameter types can be classified into the following categories
+The Empaia supported parameter types can be classified into the following categories:
 
 - the whole slide image itself (`"type": "wsi"`), there will be always **exactly one** such parameter, you can only customize its name and description,  
 - primitive values, i.e. `"type": "integer|float|bool|string"`, can be used for scalar values, which can be integer/floating point numbers, truth values, or character sequences (text),
-- graphical annotations where `"type"` takes one of `point`, `line`, `arrow`, `rectangle`, `polygon`, `circle`,
-- collections (`"type": "collection"`) wrap another parameter type to allow for multiple occurances of the wrapped type, e.g. sequence of rectangles,
+- graphical annotations where `"type"` takes one of `point`, `line`, `arrow`, `rectangle`, `polygon`, or `circle`,
+- collections (`"type": "collection"`) wrap another parameter type to allow for multiple occurrences of the wrapped type, e.g. sequence of rectangles,
 - finally there is also a `class` parameter type, which represents catgorical values. In general, this type is used in combination
-with annotations and also requires to define the classes at the root of the `ead` (see [details](https://developer.empaia.org/app_developer_docs/v3/#/specs/ead?id=class-data-type)).
+with annotations, and also requires to define the classes at the root of the `ead` (see [details](https://developer.empaia.org/app_developer_docs/v3/#/specs/ead?id=class-data-type)).
 
 > [!IMPORTANT]
 > The generic Emapaia UI requires you to also have at least one _annotation_-type input. 
@@ -181,7 +181,7 @@ Follow the official guide on how to install Docker for your operating system:
 - [Windows Install Guide](https://docs.docker.com/desktop/install/windows-install/)
 - [Linux Install Guide](https://docs.docker.com/desktop/install/linux-install/)
 
-When Docker is installed you can install `eats` simply as a [python package](https://pypi.org/project/empaia-app-test-suite/), 
+When Docker is installed you can install `eats` as a [python package](https://pypi.org/project/empaia-app-test-suite/), 
 i.e. open a up a command line (if you use windows, you have to enter a Linux shell in WSL via the Windows Terminal) and type:
 ```bash
 pip install empaia-app-test-suite
@@ -211,14 +211,16 @@ beneath the `eats` directory. The content of this file will look something like
     "/global/path/to/eats/images": "/data"
 }
 ```
-, where the `/global/path/to/` is a placeholder for the fully-qualified path from the root of your file system to the newly
+where the `/global/path/to/` is a placeholder for the fully-qualified path from the root of your file system to the newly
 created `eats` directory. 
 
 > [!NOTE]
 > As a windows user you will necissarily run EATS from within _Windows Subsystem for Linux (WSL)_ in order to run Docker.
-> Thus, paths in the Windows file system have to be aligned, concretely:
+> Thus, paths in the Windows file system have to be aligned! 
+> 
+> Concretely, the path:
 > `C:\Users\<username>\Downloads\eats\`
-> becomes
+> becomes:
 > `/mnt/c/Users/<username>/Downloads/eats/`
 > in WSL.
 
@@ -328,7 +330,7 @@ echo $APP_ID
 should yield the saved value.
 
 
-With an `APP_ID`, we can create a _job_, i.e. an instance of the algorithm. 
+With an `APP_ID`, we can create a _job_, i.e. a running instance of the algorithm. 
 But, in order to be able to be executable the job will need the input parameters. 
 Later when the app is in production, the input parameters will be determined by the user's inputs. 
 Now, during testing we have to explicitly provide the parameters beforehand.
